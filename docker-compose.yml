@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:latest
+    restart: always
+    container_name: mysqlssr
+    environment:
+      MYSQL_ROOT_PASSWORD: ssr
+      MYSQL_USER: ssr
+      MYSQL_DATABASE: ssr
+      MYSQL_PASSWORD: ssr
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d
+    command: --default-authentication-plugin=mysql_native_password
+
+  web:
+    container_name: djangossr
+    build: ./dockerfiles/django_docker
+    command:
+      python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./django:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment: 
+      - PMA_ARBITRARY=1
+    ports:
+      - 8082:80
+
+  front:
+    container_name: nuxtssr
+    build: ./dockerfiles/nuxt_docker
+    tty: true
+    volumes:
+      - ./nuxt:/code
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysqldata:
+
